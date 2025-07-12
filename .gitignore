@@ -153,4 +153,11 @@ settings.json
 migrate_roles.py
 
 # Тестовые файлы
-test_migration.env 
+test_migration.env
+
+# ========================================
+# СЛУЖЕБНЫЕ СКРИПТЫ РАЗРАБОТКИ
+# ========================================
+
+# Скрипт обновления дат в CHANGELOG (служебный)
+update_changelog.py 
