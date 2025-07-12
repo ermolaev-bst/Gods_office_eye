@@ -1,0 +1,156 @@
+# ========================================
+# КОНФИДЕНЦИАЛЬНЫЕ ФАЙЛЫ
+# ========================================
+
+# Файл с переменными окружения (содержит токены и пароли)
+.env
+
+# Файлы сессий Telegram
+*.session
+*.session-journal
+bot_session*
+pyrogram_session*
+
+# База данных
+*.db
+*.sqlite
+*.sqlite3
+
+# Логи
+*.log
+logs/
+
+# ========================================
+# ПАПКИ PYTHON
+# ========================================
+
+# Виртуальное окружение
+venv/
+env/
+ENV/
+.venv/
+.env/
+
+# Кэш Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Распределение/упаковка
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyInstaller
+*.manifest
+*.spec
+
+# ========================================
+# IDE И РЕДАКТОРЫ
+# ========================================
+
+# PyCharm
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# ========================================
+# СИСТЕМНЫЕ ФАЙЛЫ
+# ========================================
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ========================================
+# ВРЕМЕННЫЕ ФАЙЛЫ
+# ========================================
+
+# Временные файлы Excel
+~$*.xlsx
+~$*.xls
+
+# Временные файлы
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# ========================================
+# ПРОЕКТ-СПЕЦИФИЧНЫЕ ФАЙЛЫ
+# ========================================
+
+# Excel файлы с данными (если не хотите их хранить в репозитории)
+# contacts.xlsx
+# channel_users.xlsx
+
+# Файлы конфигурации сервера
+config.json
+settings.json
+
+# ========================================
+# ДОПОЛНИТЕЛЬНЫЕ ИСКЛЮЧЕНИЯ
+# ========================================
+
+# Файлы с паролями
+*password*
+*secret*
+*key*
+
+# Файлы с токенами
+*token*
+*api_key*
+
+# Файлы с ID
+*id*
+
+# Скрипт миграции (временный)
+migrate_roles.py
+
+# Тестовые файлы
+test_migration.env 

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Публикация новости в канале{% endblock %}
+{% block content %}
+<h1>Публикация новости (Канал)</h1>
+<form method="POST" enctype="multipart/form-data">
+  <div class="mb-3">
+    <label for="news_text" class="form-label">Текст новости</label>
+    <textarea name="news_text" id="news_text" class="form-control" rows="4"></textarea>
+  </div>
+  <div class="mb-3">
+    <label for="image_file" class="form-label">Изображение (необязательно)</label>
+    <input type="file" name="image_file" id="image_file" class="form-control" accept="image/*">
+  </div>
+  <button type="submit" class="btn btn-primary">Опубликовать новость</button>
+  <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Отмена</a>
+</form>
+{% endblock %}

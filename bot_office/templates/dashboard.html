@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Панель управления{% endblock %}
+{% block content %}
+<div class="card shadow">
+  <div class="card-body">
+    <h4 class="card-title">Панель управления</h4>
+    <p class="card-text">Добро пожаловать, {{ session.get("role")|capitalize }}!</p>
+    <div class="list-group">
+      {% if session.get("role") == 'admin' %}
+        <a href="{{ url_for('admin_users') }}" class="list-group-item list-group-item-action">Управление пользователями бота</a>
+      {% endif %}
+      <a href="{{ url_for('channel_users') }}" class="list-group-item list-group-item-action">Пользователи канала</a>
+      <a href="{{ url_for('publish') }}" class="list-group-item list-group-item-action">Опубликовать новость (Основной чат)</a>
+      <a href="{{ url_for('publish_group') }}" class="list-group-item list-group-item-action">Опубликовать новость (Группа)</a>
+      <a href="{{ url_for('publish_channel') }}" class="list-group-item list-group-item-action">Опубликовать новость (Канал)</a>
+      <a href="{{ url_for('notify') }}" class="list-group-item list-group-item-action">Отправить уведомление</a>
+      <a href="{{ url_for('schedule') }}" class="list-group-item list-group-item-action">Составить график кофе</a>
+      <a href="{{ url_for('edit_contacts') }}" class="list-group-item list-group-item-action">Редактировать контакты</a>
+      <a href="{{ url_for('download_contacts') }}" class="list-group-item list-group-item-action">Скачать контакты</a>
+      <a href="{{ url_for('download_schedule') }}" class="list-group-item list-group-item-action">Скачать график кофе</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
