@@ -1229,55 +1229,360 @@ async def view_users_callback(callback_query: types.CallbackQuery):
             await callback_query.answer("Произошла ошибка при загрузке пользователей.", show_alert=True)
             
 @dp.callback_query(lambda c: c.data == "assign_role")
-async def assign_role_callback(callback_query: types.CallbackQuery, state: FSMContext):
-    await callback_query.message.answer("Введите ID пользователя для назначения роли:")
-    await state.set_state(AssignRole.waiting_for_user_id)
-    await callback_query.answer()
+async def assign_role_callback(callback_query: types.CallbackQuery):
+    """Обработчик кнопки назначения ролей - показывает список пользователей с пагинацией"""
+    try:
+        # Проверяем права администратора
+        if callback_query.from_user.id != ADMIN_ID:
+            await callback_query.answer("❌ У вас нет прав для назначения ролей.", show_alert=True)
+            return
+        
+        # Получаем всех пользователей
+        users = await get_authorized_users()
+        
+        if not users:
+            await callback_query.message.answer("👥 Нет авторизованных пользователей.")
+            await callback_query.answer()
+            return
+        
+        # Показываем первую страницу
+        await show_users_page(callback_query.message, users, 0)
+        await callback_query.answer()
+        
+    except Exception as e:
+        logger.error(f"Ошибка при показе списка пользователей: {e}")
+        await callback_query.answer("Произошла ошибка при загрузке пользователей.", show_alert=True)
+
+async def show_users_page(message: types.Message, users: list, page: int, users_per_page: int = 7):
+    """Показывает страницу пользователей с кнопками для назначения ролей и удаления"""
+    try:
+        total_pages = (len(users) + users_per_page - 1) // users_per_page
+        start_idx = page * users_per_page
+        end_idx = min(start_idx + users_per_page, len(users))
+        page_users = users[start_idx:end_idx]
+        
+        # Формируем текст сообщения
+        text = f"👥 <b>Управление пользователями</b>\n\n"
+        text += f"📄 Страница {page + 1} из {total_pages}\n"
+        text += f"👤 Показано {len(page_users)} из {len(users)} пользователей\n\n"
+        
+        # Добавляем информацию о пользователях
+        for i, user in enumerate(page_users):
+            user_id, username, fio, position, role = user
+            
+            # Экранируем HTML-символы
+            safe_fio = escape_html(fio) if fio else 'Не указано'
+            safe_username = escape_html(username) if username else 'Нет'
+            safe_position = escape_html(position) if position else 'Не указано'
+            safe_role = escape_html(role) if role else 'user'
+            
+            text += f"<b>{start_idx + i + 1}.</b> 👤 <b>{safe_fio}</b>\n"
+            text += f"🆔 ID: <code>{user_id}</code>\n"
+            text += f"📱 @{safe_username}\n"
+            text += f"💼 {safe_position}\n"
+            text += f"👑 Роль: {safe_role}\n\n"
+        
+        # Создаем клавиатуру
+        keyboard = InlineKeyboardBuilder()
+        
+        # Кнопки для каждого пользователя
+        for i, user in enumerate(page_users):
+            user_id, username, fio, position, role = user
+            user_num = start_idx + i + 1
+            
+            # Кнопка для выбора пользователя
+            keyboard.add(InlineKeyboardButton(
+                text=f"👤 {user_num}. {fio[:20]}{'...' if len(fio) > 20 else ''}",
+                callback_data=f"select_user_{user_id}"
+            ))
+        
+        # Кнопки навигации
+        nav_row = []
+        if page > 0:
+            nav_row.append(InlineKeyboardButton(
+                text="⬅️ Назад",
+                callback_data=f"users_page_{page - 1}"
+            ))
+        if page < total_pages - 1:
+            nav_row.append(InlineKeyboardButton(
+                text="Вперед ➡️",
+                callback_data=f"users_page_{page + 1}"
+            ))
+        
+        if nav_row:
+            keyboard.row(*nav_row)
+        
+        # Кнопка возврата в админ панель
+        keyboard.add(InlineKeyboardButton(
+            text="🔙 Назад в админ панель",
+            callback_data="admin_panel"
+        ))
+        
+        # Настройка расположения кнопок
+        keyboard.adjust(1)  # По одной кнопке в ряду для пользователей
+        
+        await message.answer(text, reply_markup=keyboard.as_markup(), parse_mode=ParseMode.HTML)
+        
+    except Exception as e:
+        logger.error(f"Ошибка при показе страницы пользователей: {e}")
+        await message.answer("Произошла ошибка при отображении пользователей.")
+
+@dp.callback_query(lambda c: c.data and c.data.startswith("users_page_"))
+async def users_page_callback(callback_query: types.CallbackQuery):
+    """Обработчик пагинации пользователей"""
+    try:
+        # Проверяем права администратора
+        if callback_query.from_user.id != ADMIN_ID:
+            await callback_query.answer("❌ У вас нет прав для просмотра пользователей.", show_alert=True)
+            return
+        
+        # Парсим номер страницы
+        page = int(callback_query.data.split("_")[2])
+        
+        # Получаем всех пользователей
+        users = await get_authorized_users()
+        
+        if not users:
+            await callback_query.message.answer("👥 Нет авторизованных пользователей.")
+            await callback_query.answer()
+            return
+        
+        # Показываем нужную страницу
+        await show_users_page(callback_query.message, users, page)
+        await callback_query.answer()
+        
+    except Exception as e:
+        logger.error(f"Ошибка при переключении страницы пользователей: {e}")
+        await callback_query.answer("Произошла ошибка при переключении страницы.", show_alert=True)
+
+@dp.callback_query(lambda c: c.data and c.data.startswith("select_user_"))
+async def select_user_callback(callback_query: types.CallbackQuery):
+    """Обработчик выбора пользователя для управления"""
+    try:
+        # Проверяем права администратора
+        if callback_query.from_user.id != ADMIN_ID:
+            await callback_query.answer("❌ У вас нет прав для управления пользователями.", show_alert=True)
+            return
+        
+        # Парсим ID пользователя
+        user_id = int(callback_query.data.split("_")[2])
+        
+        # Получаем информацию о пользователе
+        user_info = await get_user_info(user_id)
+        
+        if not user_info:
+            await callback_query.answer("❌ Пользователь не найден.", show_alert=True)
+            return
+        
+        user_id, username, fio, position, role = user_info
+        
+        # Экранируем HTML-символы
+        safe_fio = escape_html(fio) if fio else 'Не указано'
+        safe_username = escape_html(username) if username else 'Нет'
+        safe_position = escape_html(position) if position else 'Не указано'
+        safe_role = escape_html(role) if role else 'user'
+        
+        # Формируем текст
+        text = f"👤 <b>Управление пользователем</b>\n\n"
+        text += f"🆔 <b>ID:</b> <code>{user_id}</code>\n"
+        text += f"👤 <b>ФИО:</b> {safe_fio}\n"
+        text += f"📱 <b>Username:</b> @{safe_username}\n"
+        text += f"💼 <b>Должность:</b> {safe_position}\n"
+        text += f"👑 <b>Текущая роль:</b> {safe_role}\n\n"
+        text += "Выберите действие:"
+        
+        # Создаем клавиатуру с действиями
+        keyboard = InlineKeyboardBuilder()
+        
+        # Кнопки назначения ролей
+        roles = [
+            ("👑 Администратор", "admin"),
+            ("🛡️ Модератор", "moderator"),
+            ("📢 Маркетолог", "marketer"),
+            ("👤 Пользователь", "user")
+        ]
+        
+        for role_name, role_value in roles:
+            if role_value != role:  # Не показываем текущую роль
+                keyboard.add(InlineKeyboardButton(
+                    text=f"Назначить {role_name}",
+                    callback_data=f"assign_role_{user_id}_{role_value}"
+                ))
+        
+        # Кнопка удаления пользователя
+        keyboard.add(InlineKeyboardButton(
+            text="❌ Удалить пользователя",
+            callback_data=f"confirm_delete_{user_id}"
+        ))
+        
+        # Кнопка возврата
+        keyboard.add(InlineKeyboardButton(
+            text="🔙 Назад к списку",
+            callback_data="assign_role"
+        ))
+        
+        # Настройка расположения кнопок
+        keyboard.adjust(1)  # По одной кнопке в ряду
+        
+        await callback_query.message.answer(text, reply_markup=keyboard.as_markup(), parse_mode=ParseMode.HTML)
+        await callback_query.answer()
+        
+    except Exception as e:
+        logger.error(f"Ошибка при выборе пользователя: {e}")
+        await callback_query.answer("Произошла ошибка при выборе пользователя.", show_alert=True)
+
+@dp.callback_query(lambda c: c.data and c.data.startswith("confirm_delete_"))
+async def confirm_delete_user_callback(callback_query: types.CallbackQuery):
+    """Обработчик подтверждения удаления пользователя"""
+    try:
+        # Проверяем права администратора
+        if callback_query.from_user.id != ADMIN_ID:
+            await callback_query.answer("❌ У вас нет прав для удаления пользователей.", show_alert=True)
+            return
+        
+        # Парсим ID пользователя
+        user_id = int(callback_query.data.split("_")[2])
+        
+        # Получаем информацию о пользователе
+        user_info = await get_user_info(user_id)
+        
+        if not user_info:
+            await callback_query.answer("❌ Пользователь не найден.", show_alert=True)
+            return
+        
+        user_id, username, fio, position, role = user_info
+        
+        # Экранируем HTML-символы
+        safe_fio = escape_html(fio) if fio else 'Не указано'
+        
+        # Формируем текст подтверждения
+        text = f"⚠️ <b>Подтверждение удаления</b>\n\n"
+        text += f"Вы действительно хотите удалить пользователя:\n\n"
+        text += f"👤 <b>ФИО:</b> {safe_fio}\n"
+        text += f"🆔 <b>ID:</b> <code>{user_id}</code>\n"
+        text += f"👑 <b>Роль:</b> {role}\n\n"
+        text += "⚠️ <b>Внимание:</b> Это действие нельзя отменить!"
+        
+        # Создаем клавиатуру подтверждения
+        keyboard = InlineKeyboardBuilder()
+        
+        keyboard.add(InlineKeyboardButton(
+            text="✅ Да, удалить",
+            callback_data=f"delete_user_{user_id}"
+        ))
+        keyboard.add(InlineKeyboardButton(
+            text="❌ Отмена",
+            callback_data=f"select_user_{user_id}"
+        ))
+        
+        keyboard.adjust(2)
+        
+        await callback_query.message.answer(text, reply_markup=keyboard.as_markup(), parse_mode=ParseMode.HTML)
+        await callback_query.answer()
+        
+    except Exception as e:
+        logger.error(f"Ошибка при подтверждении удаления: {e}")
+        await callback_query.answer("Произошла ошибка при подтверждении удаления.", show_alert=True)
+
+@dp.callback_query(lambda c: c.data and c.data.startswith("delete_user_"))
+async def delete_user_callback(callback_query: types.CallbackQuery):
+    """Обработчик удаления пользователя"""
+    try:
+        # Проверяем права администратора
+        if callback_query.from_user.id != ADMIN_ID:
+            await callback_query.answer("❌ У вас нет прав для удаления пользователей.", show_alert=True)
+            return
+        
+        # Парсим ID пользователя
+        user_id = int(callback_query.data.split("_")[2])
+        
+        # Получаем информацию о пользователе перед удалением
+        user_info = await get_user_info(user_id)
+        
+        if not user_info:
+            await callback_query.answer("❌ Пользователь не найден.", show_alert=True)
+            return
+        
+        user_id, username, fio, position, role = user_info
+        
+        # Удаляем пользователя
+        success = await remove_user(user_id)
+        
+        if success:
+            # Логируем действие
+            await log_admin_action(callback_query.from_user.id, f"delete_user_{user_id}")
+            
+            # Отправляем подтверждение
+            safe_fio = escape_html(fio) if fio else 'Не указано'
+            await callback_query.message.answer(
+                f"✅ Пользователь <b>{safe_fio}</b> (ID: {user_id}) успешно удален.",
+                parse_mode=ParseMode.HTML
+            )
+        else:
+            await callback_query.message.answer("❌ Произошла ошибка при удалении пользователя.")
+        
+        await callback_query.answer()
+        
+    except Exception as e:
+        logger.error(f"Ошибка при удалении пользователя: {e}")
+        await callback_query.answer("Произошла ошибка при удалении пользователя.", show_alert=True)
 
 @dp.callback_query(lambda c: c.data and c.data.startswith("assign_role_"))
 async def assign_role_callback_handler(callback_query: types.CallbackQuery):
     """Обработчик назначения роли через кнопки"""
-    await callback_query.answer()
-    
-    # Проверяем права администратора
-    if callback_query.from_user.id != ADMIN_ID:
-        await callback_query.message.answer("❌ У вас нет прав для назначения ролей.")
-        return
-    
-    # Парсим callback_data: assign_role_{user_id}_{role}
-    parts = callback_query.data.split("_")
-    if len(parts) >= 4:
-        user_id = int(parts[2])
-        role = parts[3]
+    try:
+        # Проверяем права администратора
+        if callback_query.from_user.id != ADMIN_ID:
+            await callback_query.answer("❌ У вас нет прав для назначения ролей.", show_alert=True)
+            return
         
-        try:
-            # Используем новую функцию для назначения роли
+        # Парсим callback_data: assign_role_{user_id}_{role}
+        parts = callback_query.data.split("_")
+        if len(parts) >= 4:
+            user_id = int(parts[2])
+            role = parts[3]
+            
+            # Получаем информацию о пользователе
+            user_info = await get_user_info(user_id)
+            
+            if not user_info:
+                await callback_query.answer("❌ Пользователь не найден.", show_alert=True)
+                return
+            
+            user_id, username, fio, position, old_role = user_info
+            
+            # Назначаем роль
             success = await assign_user_role(user_id, role, callback_query.from_user.id)
             
             if success:
-            role_names = {
-                'admin': '👑 Администратор',
-                'moderator': '🛡️ Модератор', 
-                'marketer': '📢 Маркетолог',
-                'user': '👤 Пользователь'
-            }
-            
-            role_name = role_names.get(role, role)
-            await callback_query.message.answer(f"✅ Роль '{role_name}' назначена пользователю {user_id}")
+                # Логируем действие
+                await log_admin_action(callback_query.from_user.id, f"assign_role_{user_id}_{old_role}_{role}")
+                
+                # Отправляем подтверждение
+                role_names = {
+                    'admin': '👑 Администратор',
+                    'moderator': '🛡️ Модератор', 
+                    'marketer': '📢 Маркетолог',
+                    'user': '👤 Пользователь'
+                }
+                
+                role_name = role_names.get(role, role)
+                safe_fio = escape_html(fio) if fio else 'Не указано'
+                
+                await callback_query.message.answer(
+                    f"✅ Роль <b>{role_name}</b> назначена пользователю <b>{safe_fio}</b> (ID: {user_id})",
+                    parse_mode=ParseMode.HTML
+                )
             else:
                 await callback_query.message.answer("❌ Произошла ошибка при назначении роли.")
-            
-        except Exception as e:
-            logger.error(f"Ошибка при назначении роли: {e}")
-            await callback_query.message.answer(f"❌ Ошибка: {str(e)}")
-    else:
-        await callback_query.message.answer("❌ Неверный формат данных для назначения роли.")
-
-@dp.callback_query(lambda c: c.data == "remove_user")
-async def remove_user_callback(callback_query: types.CallbackQuery, state: FSMContext):
-    await callback_query.message.answer("Введите ID пользователя для удаления:")
-    await state.set_state(RemoveUser.waiting_for_user_id)
-    await callback_query.answer()
+        else:
+            await callback_query.message.answer("❌ Неверный формат данных для назначения роли.")
+        
+        await callback_query.answer()
+        
+    except Exception as e:
+        logger.error(f"Ошибка при назначении роли: {e}")
+        await callback_query.answer("Произошла ошибка при назначении роли.", show_alert=True)
 
 @dp.callback_query(lambda c: c.data == "send_notification")
 async def send_notification_callback(callback_query: types.CallbackQuery, state: FSMContext):
@@ -2119,7 +2424,7 @@ async def process_assign_role_role(message: types.Message, state: FSMContext):
             success = await assign_user_role(target_user_id, role, message.from_user.id)
             
             if success:
-            await message.answer(f"✅ Роль '{role}' назначена пользователю {target_user_id}")
+                await message.answer(f"✅ Роль '{role}' назначена пользователю {target_user_id}")
             else:
                 await message.answer("❌ Произошла ошибка при назначении роли.")
         except Exception as e:
