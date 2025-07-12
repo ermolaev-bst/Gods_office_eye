@@ -1,0 +1,34 @@
+[Unit]
+Description=Corporate Telegram Bot
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=your-user
+Group=your-group
+WorkingDirectory=/path/to/bot_office
+Environment=PATH=/path/to/bot_office/venv/bin
+Environment=PYTHONPATH=/path/to/bot_office
+ExecStart=/path/to/bot_office/venv/bin/python bot.py
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=corporate-bot
+
+# Безопасность
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/path/to/bot_office
+
+# Ограничения ресурсов
+LimitNOFILE=65536
+MemoryMax=512M
+CPUQuota=50%
+
+[Install]
+WantedBy=multi-user.target 
