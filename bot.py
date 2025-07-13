@@ -17,9 +17,9 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.enums import ParseMode
 import aiohttp
 from config import *
-from database import Database
+from database import *
 from inline_keyboards import BeautifulInlineKeyboards
-from bitrix24_sync import sync_bitrix24_to_excel, get_sync_status
+from excel_handler import DataManager
 
 # Импорт веб-интерфейса (Flask)
 from moderator_web import run_flask
@@ -127,6 +127,7 @@ async def send_main_menu(message, user_id=None):
             keyboard.inline_keyboard.append([InlineKeyboardButton(text="🛡️ Панель модератора", callback_data="moderator_panel")])
         if role == 'admin':
             keyboard.inline_keyboard.append([InlineKeyboardButton(text="👑 Админ панель", callback_data="admin_panel")])
+            keyboard.inline_keyboard.append([InlineKeyboardButton(text="📢 Панель маркетолога", callback_data="marketer_panel")])
         if role == 'marketer':
             keyboard.inline_keyboard.append([InlineKeyboardButton(text="📢 Панель маркетолога", callback_data="marketer_panel")])
         
