@@ -17,7 +17,26 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.enums import ParseMode
 import aiohttp
 from config import *
-from database import *
+from database import (
+    init_db, ensure_auth_requests_timestamp_column, init_channel_subscribers_table,
+    init_notified_channel_subscribers_table, add_notified_channel_subscriber,
+    get_notified_channel_subscribers, init_notified_bot_users_table,
+    add_notified_bot_user, get_notified_bot_users, assign_roles,
+    add_auth_request, get_pending_requests, approve_user, remove_user,
+    is_authorized, get_authorized_users, get_user_role, log_admin_action,
+    add_channel_subscriber, get_channel_subscribers, remove_channel_subscriber,
+    is_channel_subscriber, is_fio_already_subscribed, get_subscriber_by_fio,
+    remove_subscriber_by_fio, get_marketers, update_news_proposal_content,
+    get_pending_auth_requests, get_user_info, add_news_proposal,
+    get_pending_news_proposals, update_news_proposal_status,
+    get_news_proposal_by_id, add_coffee_schedule_entry, get_coffee_schedule_by_date,
+    get_coffee_schedule_by_fio, get_all_coffee_schedule, get_today_coffee_schedule,
+    get_today_coffee_schedule_for_notification, mark_coffee_notification_sent_by_fio,
+    mark_coffee_reminder_sent, mark_coffee_notification_sent, clear_coffee_schedule,
+    clean_invalid_coffee_entries, fix_null_dates_in_coffee_schedule,
+    get_user_id_by_fio, get_user_by_fio, get_all_authorized_user_ids,
+    assign_user_role, get_users_by_role, migrate_roles_from_env, cleanup_env_roles
+)
 from inline_keyboards import BeautifulInlineKeyboards
 from excel_handler import DataManager
 
