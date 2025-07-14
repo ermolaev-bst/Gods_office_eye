@@ -176,6 +176,7 @@ class BeautifulInlineKeyboards:
         # --- Синхронизация ---
         builder.add(InlineKeyboardButton(text="🔄 Синхронизация", callback_data="sync_data"))
         builder.add(InlineKeyboardButton(text="📺 Синхронизация канала", callback_data="sync_channel"))
+        builder.add(InlineKeyboardButton(text="🔗 Синхронизация Bitrix24", callback_data="sync_bitrix24"))
         builder.add(InlineKeyboardButton(text="🔗 Пригласительная ссылка", callback_data="get_invite_link"))
         
         # Настройка сетки: 3 кнопки в ряд

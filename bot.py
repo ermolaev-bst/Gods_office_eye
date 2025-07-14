@@ -1681,6 +1681,55 @@ async def sync_channel_callback(callback_query: types.CallbackQuery):
     await callback_query.message.answer("✅ Синхронизация канала завершена!")
     await callback_query.answer()
 
+@dp.callback_query(lambda c: c.data == "sync_bitrix24")
+async def sync_bitrix24_callback(callback_query: types.CallbackQuery):
+    """Обработчик синхронизации с Bitrix24"""
+    # Проверяем права администратора
+    if callback_query.from_user.id != ADMIN_ID:
+        await callback_query.answer("❌ У вас нет прав для выполнения этой команды.", show_alert=True)
+        return
+    
+    await callback_query.message.answer("🔄 Запуск синхронизации с Bitrix24...")
+    
+    try:
+        from bitrix24_sync import sync_bitrix24_to_excel, get_sync_status
+        
+        # Проверяем статус перед синхронизацией
+        status = await get_sync_status(BITRIX24_WEBHOOK)
+        status_msg = f"📊 <b>Статус перед синхронизацией:</b>\n"
+        status_msg += f"   • Записей в Excel: {status.get('excel_records', 0)}\n"
+        status_msg += f"   • Сотрудников в Bitrix24: {status.get('bitrix_users', 0)}\n\n"
+        
+        await callback_query.message.answer(status_msg, parse_mode=ParseMode.HTML)
+        
+        # Запускаем синхронизацию
+        result = await sync_bitrix24_to_excel(BITRIX24_WEBHOOK)
+        
+        if result['success']:
+            details = result['details']
+            success_msg = "✅ <b>Синхронизация завершена успешно!</b>\n\n"
+            success_msg += f"📈 <b>Результаты:</b>\n"
+            success_msg += f"   • Записей до синхронизации: {details.get('initial_count', 0)}\n"
+            success_msg += f"   • Записей после синхронизации: {details.get('final_count', 0)}\n"
+            success_msg += f"   • Обновлено записей: {details.get('updated_count', 0)}\n"
+            success_msg += f"   • Добавлено новых записей: {details.get('added_count', 0)}\n"
+            success_msg += f"   • Пропущено записей: {details.get('skipped_count', 0)}\n"
+            success_msg += f"   • Сотрудников в Bitrix24: {details.get('bitrix_users', 0)}\n\n"
+            success_msg += f"📅 <b>Время:</b> {datetime.now().strftime('%d.%m.%Y %H:%M')}"
+            
+            await callback_query.message.answer(success_msg, parse_mode=ParseMode.HTML)
+        else:
+            error_msg = f"❌ <b>Ошибка синхронизации:</b>\n{result.get('error', 'Неизвестная ошибка')}"
+            await callback_query.message.answer(error_msg, parse_mode=ParseMode.HTML)
+    
+    except ImportError:
+        await callback_query.message.answer("❌ Модуль bitrix24_sync не найден. Проверьте установку зависимостей.")
+    except Exception as e:
+        logger.error(f"Ошибка синхронизации с Bitrix24: {e}")
+        await callback_query.message.answer(f"❌ Ошибка синхронизации: {e}")
+    
+    await callback_query.answer()
+
 # Обработчики модератора
 @dp.callback_query(lambda c: c.data == "publish_news")
 async def publish_news_callback(callback_query: types.CallbackQuery, state: FSMContext):
