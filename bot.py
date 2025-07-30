@@ -4,7 +4,7 @@ import sqlite3
 import pandas as pd
 import os
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 from typing import List, Dict, Optional
 import aiofiles
 from aiogram import Bot, Dispatcher, types, F
@@ -1597,7 +1597,7 @@ async def assign_role_callback_handler(callback_query: types.CallbackQuery):
                 await callback_query.message.answer("❌ Произошла ошибка при назначении роли.")
         else:
             await callback_query.message.answer("❌ Неверный формат данных для назначения роли.")
-        
+
         await callback_query.answer()
         
     except Exception as e:
@@ -2738,7 +2738,7 @@ async def periodic_channel_sync():
             next_check = now.replace(hour=17, minute=0, second=0, microsecond=0)
             
             # Если уже прошло 17:00, планируем на завтра
-            if now.time() >= datetime.time(17, 0):
+            if now.time() >= time(17, 0):
                 next_check += timedelta(days=1)
             
             # Вычисляем время ожидания

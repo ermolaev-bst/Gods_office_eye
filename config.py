@@ -5,6 +5,8 @@ load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_ID = int(os.getenv("ADMIN_ID"))
+MODERATOR_ID = int(os.getenv("MODERATOR_ID", "0"))
+MARKETER_ID = int(os.getenv("MARKETER_ID", "0"))
 CHAT_ID = int(os.getenv("CHAT_ID"))
 GROUP_CHAT_ID = int(os.getenv("GROUP_CHAT_ID", "0"))
 CHANNEL_CHAT_ID = int(os.getenv("CHANNEL_CHAT_ID", "0"))  # ID канала

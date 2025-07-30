@@ -225,6 +225,17 @@ async def get_pending_requests():
         logger.error(f"Ошибка получения заявок: {e}")
         return []
 
+async def get_auth_request_by_user_id(user_id: int):
+    """Получает заявку на авторизацию по user_id"""
+    try:
+        async with aiosqlite.connect(DB_PATH) as conn:
+            async with conn.execute('SELECT * FROM auth_requests WHERE user_id = ?', (user_id,)) as cursor:
+                request = await cursor.fetchone()
+            return request
+    except Exception as e:
+        logger.error(f"Ошибка получения заявки для пользователя {user_id}: {e}")
+        return None
+
 async def approve_user(user_id: int):
     try:
         logger.debug(f"DB: approve_user({user_id})")
