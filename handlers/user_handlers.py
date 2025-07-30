@@ -395,6 +395,7 @@ async def process_search_fio(message: types.Message, state: FSMContext):
                 position = result.get('Должность', 'Не указано')
                 department = result.get('Отдел', 'Не указано')
                 phone = result.get('Номер Телефона', result.get('Телефон', 'Не указано'))
+                photo = result.get('Фото', '')
                 
                 text += f"<b>{i}.</b> 👤 <b>{escape_html(str(fio))}</b>\n"
                 text += f"💼 {escape_html(str(position))}\n"
@@ -402,12 +403,22 @@ async def process_search_fio(message: types.Message, state: FSMContext):
                     text += f"🏢 {escape_html(str(department))}\n"
                 if str(phone) != 'Не указано':
                     text += f"📞 {escape_html(str(phone))}\n"
+                if photo and str(photo) != 'nan':
+                    text += f"📷 <b>Фото:</b> {escape_html(str(photo))}\n"
                 text += "\n"
             
             if len(results) > 10:
                 text += f"... и ещё {len(results) - 10} результат(ов)"
             
-            await message.answer(text, parse_mode=ParseMode.HTML)
+            # Создаем клавиатуру с кнопкой "Назад"
+            from aiogram.utils.keyboard import InlineKeyboardBuilder
+            builder = InlineKeyboardBuilder()
+            builder.add(types.InlineKeyboardButton(text="⬅️ Назад к поиску", callback_data="search_employees"))
+            builder.add(types.InlineKeyboardButton(text="🏠 Главное меню", callback_data="back_to_main"))
+            builder.adjust(1)
+            keyboard = builder.as_markup()
+            
+            await message.answer(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
         
         await state.clear()
         
@@ -453,6 +464,7 @@ async def process_search_position(message: types.Message, state: FSMContext):
                 position = result.get('Должность', 'Не указано')
                 department = result.get('Отдел', 'Не указано')
                 phone = result.get('Номер Телефона', result.get('Телефон', 'Не указано'))
+                photo = result.get('Фото', '')
                 
                 text += f"<b>{i}.</b> 👤 <b>{escape_html(str(fio))}</b>\n"
                 text += f"💼 {escape_html(str(position))}\n"
@@ -460,12 +472,22 @@ async def process_search_position(message: types.Message, state: FSMContext):
                     text += f"🏢 {escape_html(str(department))}\n"
                 if str(phone) != 'Не указано':
                     text += f"📞 {escape_html(str(phone))}\n"
+                if photo and str(photo) != 'nan':
+                    text += f"📷 <b>Фото:</b> {escape_html(str(photo))}\n"
                 text += "\n"
             
             if len(results) > 10:
                 text += f"... и ещё {len(results) - 10} результат(ов)"
             
-            await message.answer(text, parse_mode=ParseMode.HTML)
+            # Создаем клавиатуру с кнопкой "Назад"
+            from aiogram.utils.keyboard import InlineKeyboardBuilder
+            builder = InlineKeyboardBuilder()
+            builder.add(types.InlineKeyboardButton(text="⬅️ Назад к поиску", callback_data="search_employees"))
+            builder.add(types.InlineKeyboardButton(text="🏠 Главное меню", callback_data="back_to_main"))
+            builder.adjust(1)
+            keyboard = builder.as_markup()
+            
+            await message.answer(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
         
         await state.clear()
         
@@ -511,6 +533,7 @@ async def process_search_department(message: types.Message, state: FSMContext):
                 position = result.get('Должность', 'Не указано')
                 department = result.get('Отдел', 'Не указано')
                 phone = result.get('Номер Телефона', result.get('Телефон', 'Не указано'))
+                photo = result.get('Фото', '')
                 
                 text += f"<b>{i}.</b> 👤 <b>{escape_html(str(fio))}</b>\n"
                 text += f"💼 {escape_html(str(position))}\n"
@@ -518,12 +541,22 @@ async def process_search_department(message: types.Message, state: FSMContext):
                     text += f"🏢 {escape_html(str(department))}\n"
                 if str(phone) != 'Не указано':
                     text += f"📞 {escape_html(str(phone))}\n"
+                if photo and str(photo) != 'nan':
+                    text += f"📷 <b>Фото:</b> {escape_html(str(photo))}\n"
                 text += "\n"
             
             if len(results) > 10:
                 text += f"... и ещё {len(results) - 10} результат(ов)"
             
-            await message.answer(text, parse_mode=ParseMode.HTML)
+            # Создаем клавиатуру с кнопкой "Назад"
+            from aiogram.utils.keyboard import InlineKeyboardBuilder
+            builder = InlineKeyboardBuilder()
+            builder.add(types.InlineKeyboardButton(text="⬅️ Назад к поиску", callback_data="search_employees"))
+            builder.add(types.InlineKeyboardButton(text="🏠 Главное меню", callback_data="back_to_main"))
+            builder.adjust(1)
+            keyboard = builder.as_markup()
+            
+            await message.answer(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
         
         await state.clear()
         

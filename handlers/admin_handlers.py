@@ -101,6 +101,10 @@ async def view_requests_callback(callback_query: types.CallbackQuery):
         
         text = "📋 <b>Заявки на авторизацию:</b>\n\n"
         
+        # Создаем клавиатуру с кнопками для каждой заявки
+        from aiogram.utils.keyboard import InlineKeyboardBuilder
+        builder = InlineKeyboardBuilder()
+        
         for i, request in enumerate(requests[:10], 1):  # Показываем первые 10
             try:
                 # auth_requests содержит: user_id, username, fio, position, timestamp
@@ -121,6 +125,16 @@ async def view_requests_callback(callback_query: types.CallbackQuery):
                 text += f"📱 <b>Username:</b> @{safe_username}\n"
                 text += f"📅 <b>Дата:</b> {timestamp}\n\n"
                 
+                # Добавляем кнопки для каждой заявки
+                builder.add(types.InlineKeyboardButton(
+                    text=f"✅ Принять #{i}",
+                    callback_data=f"approve_{user_id}"
+                ))
+                builder.add(types.InlineKeyboardButton(
+                    text=f"❌ Отклонить #{i}",
+                    callback_data=f"decline_{user_id}"
+                ))
+                
             except Exception as req_error:
                 logger.error(f"Ошибка обработки заявки {request}: {req_error}")
                 continue
@@ -128,7 +142,20 @@ async def view_requests_callback(callback_query: types.CallbackQuery):
         if len(requests) > 10:
             text += f"... и ещё {len(requests) - 10} заявок"
         
-        await callback_query.message.answer(text, parse_mode=ParseMode.HTML)
+        # Добавляем кнопку "Назад"
+        builder.add(types.InlineKeyboardButton(
+            text="⬅️ Назад",
+            callback_data="admin_panel"
+        ))
+        
+        # Настраиваем расположение кнопок: по 2 кнопки в ряд для заявок, 1 для "Назад"
+        num_requests = min(len(requests), 10)
+        adjust_pattern = [2] * num_requests + [1]  # 2 кнопки для каждой заявки + 1 для "Назад"
+        builder.adjust(*adjust_pattern)
+        
+        keyboard = builder.as_markup()
+        
+        await callback_query.message.answer(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
         await callback_query.answer(f"Найдено {len(requests)} заявок")
         
     except Exception as e:
