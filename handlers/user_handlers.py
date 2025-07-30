@@ -390,6 +390,17 @@ async def process_search_fio(message: types.Message, state: FSMContext):
             text += f"📝 <b>Запрос:</b> {escape_html(query)}\n"
             text += f"📊 <b>Найдено:</b> {len(results)} сотрудник(ов)\n\n"
             
+            # Проверяем, есть ли фото у первого результата для отправки как главное фото
+            main_photo = None
+            for result in results[:1]:  # Берем первый результат
+                photo = result.get('Фото', '')
+                if photo and str(photo) != 'nan' and str(photo).strip():
+                    import os
+                    photo_path = str(photo).strip()
+                    if os.path.exists(photo_path):
+                        main_photo = photo_path
+                        break
+            
             for i, result in enumerate(results[:10], 1):  # Показываем первые 10
                 fio = result.get('ФИО', 'Не указано')
                 position = result.get('Должность', 'Не указано')
@@ -403,8 +414,8 @@ async def process_search_fio(message: types.Message, state: FSMContext):
                     text += f"🏢 {escape_html(str(department))}\n"
                 if str(phone) != 'Не указано':
                     text += f"📞 {escape_html(str(phone))}\n"
-                if photo and str(photo) != 'nan':
-                    text += f"📷 <b>Фото:</b> {escape_html(str(photo))}\n"
+                if photo and str(photo) != 'nan' and str(photo).strip():
+                    text += f"📷 <b>Есть фото</b>\n"
                 text += "\n"
             
             if len(results) > 10:
@@ -418,7 +429,20 @@ async def process_search_fio(message: types.Message, state: FSMContext):
             builder.adjust(1)
             keyboard = builder.as_markup()
             
-            await message.answer(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
+            # Отправляем результат с фото (если есть) или без
+            if main_photo:
+                try:
+                    await message.answer_photo(
+                        photo=types.FSInputFile(main_photo),
+                        caption=text,
+                        reply_markup=keyboard,
+                        parse_mode=ParseMode.HTML
+                    )
+                except Exception as photo_error:
+                    logger.error(f"Ошибка отправки фото {main_photo}: {photo_error}")
+                    await message.answer(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
+            else:
+                await message.answer(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
         
         await state.clear()
         
@@ -459,6 +483,17 @@ async def process_search_position(message: types.Message, state: FSMContext):
             text += f"📝 <b>Запрос:</b> {escape_html(query)}\n"
             text += f"📊 <b>Найдено:</b> {len(results)} сотрудник(ов)\n\n"
             
+            # Проверяем, есть ли фото у первого результата для отправки как главное фото
+            main_photo = None
+            for result in results[:1]:  # Берем первый результат
+                photo = result.get('Фото', '')
+                if photo and str(photo) != 'nan' and str(photo).strip():
+                    import os
+                    photo_path = str(photo).strip()
+                    if os.path.exists(photo_path):
+                        main_photo = photo_path
+                        break
+            
             for i, result in enumerate(results[:10], 1):  # Показываем первые 10
                 fio = result.get('ФИО', 'Не указано')
                 position = result.get('Должность', 'Не указано')
@@ -472,8 +507,8 @@ async def process_search_position(message: types.Message, state: FSMContext):
                     text += f"🏢 {escape_html(str(department))}\n"
                 if str(phone) != 'Не указано':
                     text += f"📞 {escape_html(str(phone))}\n"
-                if photo and str(photo) != 'nan':
-                    text += f"📷 <b>Фото:</b> {escape_html(str(photo))}\n"
+                if photo and str(photo) != 'nan' and str(photo).strip():
+                    text += f"📷 <b>Есть фото</b>\n"
                 text += "\n"
             
             if len(results) > 10:
@@ -487,7 +522,20 @@ async def process_search_position(message: types.Message, state: FSMContext):
             builder.adjust(1)
             keyboard = builder.as_markup()
             
-            await message.answer(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
+            # Отправляем результат с фото (если есть) или без
+            if main_photo:
+                try:
+                    await message.answer_photo(
+                        photo=types.FSInputFile(main_photo),
+                        caption=text,
+                        reply_markup=keyboard,
+                        parse_mode=ParseMode.HTML
+                    )
+                except Exception as photo_error:
+                    logger.error(f"Ошибка отправки фото {main_photo}: {photo_error}")
+                    await message.answer(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
+            else:
+                await message.answer(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
         
         await state.clear()
         
@@ -528,6 +576,17 @@ async def process_search_department(message: types.Message, state: FSMContext):
             text += f"📝 <b>Запрос:</b> {escape_html(query)}\n"
             text += f"📊 <b>Найдено:</b> {len(results)} сотрудник(ов)\n\n"
             
+            # Проверяем, есть ли фото у первого результата для отправки как главное фото
+            main_photo = None
+            for result in results[:1]:  # Берем первый результат
+                photo = result.get('Фото', '')
+                if photo and str(photo) != 'nan' and str(photo).strip():
+                    import os
+                    photo_path = str(photo).strip()
+                    if os.path.exists(photo_path):
+                        main_photo = photo_path
+                        break
+            
             for i, result in enumerate(results[:10], 1):  # Показываем первые 10
                 fio = result.get('ФИО', 'Не указано')
                 position = result.get('Должность', 'Не указано')
@@ -541,8 +600,8 @@ async def process_search_department(message: types.Message, state: FSMContext):
                     text += f"🏢 {escape_html(str(department))}\n"
                 if str(phone) != 'Не указано':
                     text += f"📞 {escape_html(str(phone))}\n"
-                if photo and str(photo) != 'nan':
-                    text += f"📷 <b>Фото:</b> {escape_html(str(photo))}\n"
+                if photo and str(photo) != 'nan' and str(photo).strip():
+                    text += f"📷 <b>Есть фото</b>\n"
                 text += "\n"
             
             if len(results) > 10:
@@ -556,7 +615,20 @@ async def process_search_department(message: types.Message, state: FSMContext):
             builder.adjust(1)
             keyboard = builder.as_markup()
             
-            await message.answer(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
+            # Отправляем результат с фото (если есть) или без
+            if main_photo:
+                try:
+                    await message.answer_photo(
+                        photo=types.FSInputFile(main_photo),
+                        caption=text,
+                        reply_markup=keyboard,
+                        parse_mode=ParseMode.HTML
+                    )
+                except Exception as photo_error:
+                    logger.error(f"Ошибка отправки фото {main_photo}: {photo_error}")
+                    await message.answer(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
+            else:
+                await message.answer(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
         
         await state.clear()
         
